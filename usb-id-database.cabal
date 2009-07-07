@@ -18,7 +18,7 @@ Description:
 Extra-Source-Files: example.hs
 
 Library
-  Build-Depends: base >= 3 && < 4
+  Build-Depends: base >= 3 && < 4.2
                , bimap >= 0.2 && < 0.3
                , bytestring >= 0.9 && < 1.0
                , download >= 0.3 && < 0.4
