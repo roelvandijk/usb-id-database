@@ -2,70 +2,79 @@
 
 {-| A database of USB identifiers.
 
-Databases with vendor names and identifiers can be loaded from
-string, file or directly from <http://www.usb.org>.
+Databases with vendor names and identifiers can be loaded from string,
+file or directly from <http://www.usb.org> or
+<http://linux-usb.sourceforge.net>.
 
 Example usage:
 
 @
-module Main where
-
 import System.USB.IDDB
 import Data.ByteString.Char8 (pack, unpack)
 
 main :: IO ()
-main = do -- Acquire the default database
-          db <- 'vdbDefault'
-          -- Print the name of vendor 0x1D6B
-          'putStrLn' $ 'maybe \"unknown ID!\" 'unpack'
-                   $ 'vendorName' db 0x1D6B
-          -- Print the ID of \"The Linux Foundation\"
-          'putStrLn' $ 'maybe' \"unknown name!\" 'show'
-                   $ 'vendorID' db ('pack' \"The Linux Foundation\")
+main = do demo =<< 'linuxUsbIdDb'
+          demo =<< 'usbDotOrgDb'
+
+demo :: 'IDDB' -> IO ()
+demo db = do -- Print the name of vendor 0x1D6B
+             putStrLn $ maybe \"unknown ID!\" unpack
+                      $ 'vendorName' db 0x1D6B
+             -- Print the ID of \"The Linux Foundation\"
+             putStrLn $ maybe \"unknown name!\" show
+                      $ 'vendorId' db (pack \"The Linux Foundation\")
 @
-
-EBNF grammar of the textual representation of a vendor database:
-
->  vendor database = {row};
->  row             = vendor id, "|", vendor name;
->  vendor id       = natural number;
->  vendor name     = ASCII string;
->  natural number  = positive digit, {digit}
->  positive digit  = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
->  digit           = "0" | positive digit;
 -}
 module System.USB.IDDB
     ( -- *Types
-      VendorID
+      IDDB
+    , VendorID
     , VendorName
-    , VendorDB
+    , ProductID
+    , ProductName
 
       -- *Acquire database
-    , vdbFromString
-    , vdbFromFile
-    , vdbFromUsbDotOrg
-    , vdbDefault
+    , emptyDb
 
-      -- *Export database
-    , vdbToString
-    , vdbToFile
+      -- **usb.org
+    , parseUsbDotOrgDb
+    , usbDotOrgDb
+    , usbDotOrgDbFromWeb
+
+      -- **linux-usb.sourceforge.net
+    , parseUsbIdRepoDb
+    , usbIdRepoDb
+    , usbIdRepoDbFromWeb
 
       -- *Query database
     , vendorName
-    , vendorID
+    , vendorId
+    , productName
+    , productId
     )
     where
 
-import Control.Arrow    ((>>>))
-import Control.Monad    (liftM)
-import Data.Char        (isSpace)
-import Data.Maybe       (fromJust)
-import Network.Download (openURI)
-import System.IO        (FilePath)
-import Text.Read        (reads)
+import Control.Monad            (liftM)
+import Data.Encoding            ( decodeStrictByteString
+                                , encodeStrictByteString
+                                )
+import Data.Maybe               (fromJust)
+import Data.String.UTF8         (UTF8, fromRep)
+import Network.Download         (openURI)
+import Numeric                  (readHex)
+import Parsimony
+import Parsimony.Char
+import System.IO                (FilePath)
 
-import qualified Data.Bimap            as BM
-import qualified Data.ByteString.Char8 as BS
+import qualified Codec.Binary.UTF8.String as UTF8 (encode)
+import qualified Data.Bimap               as BM
+import qualified Data.ByteString          as BS ( ByteString
+                                                , pack
+                                                , readFile
+                                                )
+import qualified Data.Encoding.ISO88591   as Enc (ISO88591(..))
+import qualified Data.Encoding.UTF8       as Enc (UTF8(..))
+import qualified Data.Map                 as MP
 
 #ifdef BUILD_WITH_CABAL
 import Paths_usb_id_database (getDataFileName)
@@ -78,111 +87,172 @@ getDataFileName = return
 -- Types
 -------------------------------------------------------------------------------
 
--- |A numerical identifier for a vendor.
-type VendorID   = Int
--- |The name of a company/entity which has acquired an official ID
---  from the USB Implementors Forum.
-type VendorName = BS.ByteString
+type VendorID  = Int
+type ProductID = Int
 
--- |A database of USB vendors. Associates numerical vendor ID's with
---  vendor names and vice versa.
-type VendorDB = BM.Bimap VendorID VendorName
+type VendorName  = BS.ByteString
+type ProductName = BS.ByteString
+
+-- |A database of USB identifiers. Contains both vendor identifiers
+-- and product identifiers.
+data IDDB = IDDB { dbVendors  :: BM.Bimap VendorID VendorName
+                 , dbProducts :: MP.Map   VendorID ProductDB
+                 }
+
+type ProductDB = BM.Bimap ProductID ProductName
+
+type BSParser a = Parser (UTF8 BS.ByteString) a
 
 -------------------------------------------------------------------------------
--- Acquire database
+-- Empty
 -------------------------------------------------------------------------------
 
--- |Construct a vendor database from a string.
-vdbFromString :: BS.ByteString -> Maybe VendorDB
-vdbFromString = strip >>> BS.lines >>> map parseLine >>> sequence
-                >>> maybe Nothing (Just . BM.fromList)
-    where parseLine :: BS.ByteString -> Maybe (VendorID, VendorName)
-          parseLine line = let (vid, rest) = BS.break (== '|') line
-                           in if BS.null rest
-                              then Nothing
-                              else let name = BS.tail rest
-                                   in case reads (BS.unpack vid) of
-                                        []           -> Nothing
-                                        ((vid',_):_) -> Just (vid', name)
+-- |An empty database.
+emptyDb :: IDDB
+emptyDb = IDDB { dbVendors  = BM.empty
+               , dbProducts = MP.empty
+               }
+
+-------------------------------------------------------------------------------
+-- www.usb.org
+-------------------------------------------------------------------------------
+
+-- |Construct a database from a string in the format used by usb.org.
+parseUsbDotOrgDb :: UTF8 BS.ByteString -> Maybe IDDB
+parseUsbDotOrgDb = eitherMaybe . parse usbDotOrgDbParser
+
+usbDotOrgDbParser :: BSParser IDDB
+usbDotOrgDbParser = do vendors <- many vendorParser
+                       return $ IDDB { dbVendors  = BM.fromList vendors
+                                     , dbProducts = MP.empty
+                                     }
+    where
+      vendorParser :: BSParser (VendorID, VendorName)
+      vendorParser = do vid  <- many1 digit
+                        char '|'
+                        name <- restOfLine
+                        return (read vid, BS.pack $ UTF8.encode name)
 
 -- |Load a vendor database from file. If the file can not be read for
 --  some reason an error will be thrown.
-vdbFromFile :: FilePath -> IO (Maybe VendorDB)
-vdbFromFile = liftM vdbFromString . BS.readFile
+usbDotOrgDbFromFile :: FilePath -> IO (Maybe IDDB)
+usbDotOrgDbFromFile = liftM (parseUsbDotOrgDb . fromRep) . BS.readFile
 
-vdbUsbDotOrgUrl :: String
-vdbUsbDotOrgUrl = "http://www.usb.org/developers/tools/comp_dump"
-
--- |Construct a vendor database from the list of companies available
---  at <http://www.usb.org/developers/tools/comp_dump>. The website
+-- |Construct a database from the list of companies available at
+--  <http://www.usb.org/developers/tools/comp_dump>. The website
 --  informs us that: /"Remember this list changes almost daily, be/
 --  /sure to get a fresh copy when you use the tools"/. However, the
 --  list seems to be quite stable. Using this function more than once
 --  a day is probably overkill.
-vdbFromUsbDotOrg :: IO (Maybe VendorDB)
-vdbFromUsbDotOrg = liftM (either (const Nothing) vdbFromString)
-                   $ openURI vdbUsbDotOrgUrl
+usbDotOrgDbFromWeb :: IO (Maybe IDDB)
+usbDotOrgDbFromWeb = liftM ( either (const Nothing)
+                                     (parseUsbDotOrgDb . fromRep)
+                            ) $ openURI usbDotOrgUrl
 
-vdbDataFile :: FilePath
-vdbDataFile = "usb_vendor_list.txt"
+usbDotOrgDataFile :: FilePath
+usbDotOrgDataFile = "usb_dot_org_db.txt"
 
--- |Load a vendor database from a static file which is supplied with
---  the package.
-vdbDefault :: IO VendorDB
-vdbDefault = getDataFileName vdbDataFile >>= liftM fromJust . vdbFromFile
+usbDotOrgUrl :: String
+usbDotOrgUrl = "http://www.usb.org/developers/tools/comp_dump"
+
+-- |Load a database from a snapshot of the usb.org database which is
+--  supplied with the package.
+usbDotOrgDb :: IO IDDB
+usbDotOrgDb = getDataFileName usbDotOrgDataFile >>= liftM fromJust . usbDotOrgDbFromFile
 
 -------------------------------------------------------------------------------
--- Export database
+-- linux-usb.sourceforge.net
 -------------------------------------------------------------------------------
 
--- |Convert a vendor database to its textual representation.
-vdbToString :: VendorDB -> BS.ByteString
-vdbToString = BS.unlines . map row . BM.toAscList
-    where row (vid, name) = BS.pack (show vid)
-                            `BS.append` BS.singleton '|'
-                            `BS.append` name
+-- |Construct a database from a string in the format used by linux-usb.sourceforge.net.
+parseUsbIdRepoDb :: UTF8 BS.ByteString -> Maybe IDDB
+parseUsbIdRepoDb = eitherMaybe . parse usbIdRepoDbParser
 
--- |Write a database to a file. If this file is not accessible an
---  error will be thrown.
-vdbToFile :: FilePath -> VendorDB -> IO ()
-vdbToFile fp = BS.writeFile fp . vdbToString
+usbIdRepoDbParser :: BSParser IDDB
+usbIdRepoDbParser = do
+  spaces >> many (lexeme comment)
+  xs <- many vendorParser
+  return $ IDDB { dbVendors  = BM.fromList [(vid, name) | (vid, name, _)   <- xs]
+                , dbProducts = MP.fromList [(vid, pdb)  | (vid, _,    pdb) <- xs]
+                }
+    where
+      lexeme :: BSParser a -> BSParser a
+      lexeme p = do x <- p
+                    spaces
+                    return x
+
+      comment :: BSParser String
+      comment = char '#' >> restOfLine
+
+      hexId :: Num n => BSParser n
+      hexId = do ds <- count 4 hexDigit
+                 case readHex ds of
+                   [(n, _)]  -> return n
+                   _         -> error "impossible"
+
+      vendorParser :: BSParser (VendorID, VendorName, ProductDB)
+      vendorParser = do vid <- hexId
+                        spaces
+                        name <- restOfLine
+                        products <- many (tab >> productParser)
+                        return ( vid
+                               , BS.pack $ UTF8.encode name
+                               , BM.fromList products
+                               )
+
+      productParser :: BSParser (ProductID, ProductName)
+      productParser = do pid <- hexId
+                         spaces
+                         name <- restOfLine
+                         return (pid, BS.pack $ UTF8.encode name)
+
+-- |Construct a database from the data available at
+-- <http://linux-usb.sourceforge.net/usb.ids>.
+usbIdRepoDbFromWeb :: IO (Maybe IDDB)
+usbIdRepoDbFromWeb = liftM ( either (const Nothing)
+                                    (parseUsbIdRepoDb . fromRep . iso88591_to_utf8)
+                           ) $ openURI usbIdRepoURL
+
+usbIdRepoDbFromFile :: FilePath -> IO (Maybe IDDB)
+usbIdRepoDbFromFile = liftM (parseUsbIdRepoDb . fromRep . iso88591_to_utf8) . BS.readFile
+
+iso88591_to_utf8 :: BS.ByteString -> BS.ByteString
+iso88591_to_utf8 = encodeStrictByteString Enc.UTF8
+                 . decodeStrictByteString Enc.ISO88591
+
+usbIdRepoDb :: IO IDDB
+usbIdRepoDb = getDataFileName usbIdRepoDataFile >>= liftM fromJust . usbIdRepoDbFromFile
+
+usbIdRepoDataFile :: FilePath
+usbIdRepoDataFile = "usb_id_repo_db.txt"
+
+usbIdRepoURL :: String
+usbIdRepoURL = "http://linux-usb.sourceforge.net/usb.ids"
 
 -------------------------------------------------------------------------------
 -- Query database
 -------------------------------------------------------------------------------
 
 -- |Retrieve the name of a vendor given its ID.
-vendorName :: VendorDB -> VendorID -> Maybe VendorName
-vendorName db i = BM.lookup i db
+vendorName :: IDDB -> VendorID -> Maybe VendorName
+vendorName db vid = BM.lookup vid (dbVendors db)
 
 -- |Retrieve the ID of a vendor given its name.
-vendorID :: VendorDB -> VendorName -> Maybe VendorID
-vendorID db name = BM.lookupR name db
+vendorId :: IDDB -> VendorName -> Maybe VendorID
+vendorId db name = BM.lookupR name (dbVendors db)
+
+productName :: IDDB -> VendorID -> ProductID -> Maybe ProductName
+productName db vid pid = BM.lookup pid =<< MP.lookup vid (dbProducts db)
+
+productId :: IDDB -> VendorID -> ProductName -> Maybe ProductID
+productId db vid name = BM.lookupR name =<< MP.lookup vid (dbProducts db)
 
 -------------------------------------------------------------------------------
 -- Utility
 -------------------------------------------------------------------------------
 
-stripL :: BS.ByteString -> BS.ByteString
-stripL = snd . BS.span isSpace
+eitherMaybe :: Either e a -> Maybe a
+eitherMaybe = either (const Nothing) Just
 
-stripR :: BS.ByteString -> BS.ByteString
-stripR = fst . BS.spanEnd isSpace
-
-strip :: BS.ByteString -> BS.ByteString
-strip = stripR . stripL
-
--------------------------------------------------------------------------------
--- Properties
--------------------------------------------------------------------------------
-
-{--
-
--- |Converting a vendor DB to a string and back should yield the same DB.
-prop_toAndFromString :: VendorDB -> Bool
-prop_toAndFromString db = maybe False (== db) (vdbFromString $ vdbToString db)
-
-prop_fromAndToString :: String -> Bool
-prop_fromAndToString = maybe True prop_toAndFromString . vdbFromString
-
---}
+restOfLine :: BSParser String
+restOfLine = manyTill anyChar newline
