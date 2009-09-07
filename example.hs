@@ -1,34 +1,29 @@
 module Main where
 
-import System.USB.IDDB
 import Data.ByteString.Char8 (pack, unpack)
+import System.USB.IDDB
+import System.USB.IDDB.LinuxUsbIdRepo
+import Text.Printf
+
 
 main :: IO ()
-main = do putStrLn "linux-usb.sourceforge.net - from file"
-          demo =<< usbIdRepoDb
-          putStrLn ""
+main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
+          db <- staticDb
 
-          putStrLn "usb.org - from file"
-          demo =<< usbDotOrgDb
-          putStrLn ""
+          -- Print the name of vendor 0x1d6b
+          putStrLn $ maybe "unknown VID!" unpack
+                   $ vendorName db 0x1d6b
 
-          putStrLn "linux-usb.sourceforge.net - from web"
-          db <- usbIdRepoDbFromWeb
-          maybe (putStrLn "can't load from linux-usb.sourceforge.net")
-                demo
-                db
-          putStrLn ""
+          -- Print the ID of "Linux Foundation"
+          putStrLn $ maybe "unknown vendor name!" (printf "0x%04x")
+                   $ vendorId db (pack "Linux Foundation")
 
-          putStrLn "usb.org - from web"
-          db <- usbDotOrgDbFromWeb
-          maybe (putStrLn "can't load from usb.org")
-                demo
-                db
+          -- Print the name of the product with ID 0x0101 from the
+          -- vendor with ID 0x1d6b.
+          putStrLn $ maybe "unknown PID!" unpack
+                   $ productName db 0x1d6b 0x0101
 
-demo :: IDDB -> IO ()
-demo db = do -- Print the name of vendor 0x1D6B
-             putStrLn $ maybe "unknown ID!" unpack
-                      $ vendorName db 0x1D6B
-             -- Print the ID of "The Linux Foundation"
-             putStrLn $ maybe "unknown name!" show
-                      $ vendorId db (pack "The Linux Foundation")
+          -- Print the ID of the product with the name "Audio Gadget"
+          -- from the vendor with ID 0x1d6b.
+          putStrLn $ maybe "unknown product name!" (printf "0x%04x")
+                   $ productId db 0x1d6b (pack "Audio Gadget")
