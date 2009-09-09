@@ -1,25 +1,29 @@
-Name:          usb-id-database
-Version:       0.2
-Cabal-Version: >=1.6
-Build-Type:    Simple
-Stability:     provisional
-Author:        Roel van Dijk
-Maintainer:    vandijk.roel@gmail.com
-Copyright:     (c) 2009 Roel van Dijk
-License:       BSD3
-License-File:  LICENSE
-Category:      System
-Synopsis:      A database of USB identifiers
-Description:
+name:          usb-id-database
+version:       0.2
+cabal-version: >=1.6
+build-type:    Simple
+stability:     provisional
+author:        Roel van Dijk
+maintainer:    vandijk.roel@gmail.com
+copyright:     (c) 2009 Roel van Dijk
+license:       BSD3
+license-file:  LICENSE
+category:      System
+synopsis:      A database of USB identifiers
+description:
   Functions to find the names associated with numerical vendor and
   product identifiers.
 
-Extra-Source-Files: example.hs
-Data-Files: usb_dot_org_db.txt
+extra-source-files: example.hs
+data-files: usb_dot_org_db.txt
           , usb_id_repo_db.txt
 
-Library
-  Build-Depends: base        >= 3     && < 4.2
+flag example
+  description: Build an example program
+  default:     False
+
+library
+  build-depends: base        >= 3     && < 4.2
                , bimap       >= 0.2   && < 0.3
                , bytestring  >= 0.9   && < 1.0
                , containers  >= 0.2   && < 0.3
@@ -27,19 +31,21 @@ Library
                , encoding    >= 0.6.2 && < 0.7
                , parsimony   >= 1     && < 1.1
                , utf8-string >= 0.3.5 && < 0.4
-  Extensions: CPP
-  GHC-Options: -Wall
-  CPP-Options: -DBUILD_WITH_CABAL
-  Exposed-Modules: System.USB.IDDB
+  ghc-options: -Wall
+  cpp-options: -DBUILD_WITH_CABAL
+  exposed-modules: System.USB.IDDB
                  , System.USB.IDDB.UsbDotOrg
                  , System.USB.IDDB.LinuxUsbIdRepo
-  Other-Modules: Paths_usb_id_database
+  other-modules: Paths_usb_id_database
                , System.USB.IDDB.Base
                , System.USB.IDDB.Misc
 
--- Uncomment to build a small example program
--- Executable example
---   Extensions: CPP
---   GHC-Options: -Wall
---   CPP-Options: -DBUILD_WITH_CABAL
---   Main-Is: example.hs
+executable example
+  extensions: CPP
+  ghc-options: -Wall
+  cpp-options: -DBUILD_WITH_CABAL
+  main-is: example.hs
+  if flag(example)
+    buildable: True
+  else
+    buildable: False

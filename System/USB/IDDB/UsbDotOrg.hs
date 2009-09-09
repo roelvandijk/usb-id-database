@@ -32,6 +32,7 @@ staticDbParser :: BSParser IDDB
 staticDbParser = do vendors <- many vendorParser
                     return IDDB { dbVendors  = BM.fromList vendors
                                 , dbProducts = MP.empty
+                                , dbClasses  = MP.empty
                                 }
     where
       vendorParser :: BSParser (VendorID, VendorName)

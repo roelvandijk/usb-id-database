@@ -1,10 +1,7 @@
-{-# LANGUAGE CPP #-}
-
 {-| A database of USB identifiers.
 
 Databases with vendor names and identifiers can be loaded from string,
-file or directly from <http://www.usb.org> or
-<http://linux-usb.sourceforge.net>.
+file or directly from <http://www.usb.org> or <http://linux-usb.org>.
 
 Example usage:
 
@@ -15,7 +12,7 @@ import System.USB.IDDB.LinuxUsbIdRepo
 import Text.Printf
 
 main :: IO ()
-main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
+main = do -- Load a snapshot from the linux-usb.org database.
           db <- 'staticDb'
           -- Print the name of vendor 0x1d6b
           'putStrLn' $ 'maybe' \"unknown VID!\" 'unpack'
@@ -45,10 +42,12 @@ main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
 module System.USB.IDDB
     ( -- *Types
       IDDB
-    , VendorID
-    , VendorName
-    , ProductID
-    , ProductName
+
+    , VendorID,   VendorName
+    , ProductID,  ProductName
+    , ClassID,    ClassName
+    , SubClassID, SubClassName
+    , ProtocolID, ProtocolName
 
     , emptyDb
 
@@ -57,6 +56,9 @@ module System.USB.IDDB
     , vendorId
     , productName
     , productId
+    , className
+    , subClassName
+    , protocolName
     )
     where
 
