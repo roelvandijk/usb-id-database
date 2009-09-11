@@ -7,44 +7,45 @@ module System.USB.IDDB.UsbDotOrg
 
 import Control.Monad        (liftM)
 import Data.Maybe           (fromJust)
-import Data.String.UTF8     (UTF8, fromRep)
-import Network.Download     (openURI)
+import Network.Download     (openURIString)
 import Parsimony
 import Parsimony.Char       (char, digit)
-import System.IO            (FilePath)
+import System.IO            (FilePath, readFile)
 import System.USB.IDDB.Base ( IDDB(..)
                             , VendorID, VendorName
                             , getDataFileName
                             )
-import System.USB.IDDB.Misc (BSParser, eitherMaybe, restOfLine)
+import System.USB.IDDB.Misc ( eitherMaybe
+                            , swap
+                            , restOfLine
+                            )
 
-import qualified Codec.Binary.UTF8.String as UTF8 (encode)
-import qualified Data.Bimap               as BM   (fromList)
-import qualified Data.ByteString          as BS   (ByteString, pack, readFile)
-import qualified Data.Map                 as MP   (empty)
+import qualified Data.IntMap as IM (fromList, empty)
+import qualified Data.Map    as MP (fromList)
 
 
 -- |Construct a database from a string in the format used by usb.org.
-parseDb :: UTF8 BS.ByteString -> Maybe IDDB
+parseDb :: String -> Maybe IDDB
 parseDb = eitherMaybe . parse staticDbParser
 
-staticDbParser :: BSParser IDDB
+staticDbParser :: Parser String IDDB
 staticDbParser = do vendors <- many vendorParser
-                    return IDDB { dbVendors  = BM.fromList vendors
-                                , dbProducts = MP.empty
-                                , dbClasses  = MP.empty
+                    return IDDB { dbVendorNameId = MP.fromList $ map swap vendors
+                                , dbVendorIdName = IM.fromList vendors
+                                , dbProducts = IM.empty
+                                , dbClasses  = IM.empty
                                 }
     where
-      vendorParser :: BSParser (VendorID, VendorName)
+      vendorParser :: Parser String (VendorID, VendorName)
       vendorParser = do vid  <- many1 digit
                         char '|'
                         name <- restOfLine
-                        return (read vid, BS.pack $ UTF8.encode name)
+                        return (read vid, name)
 
 -- |Load a vendor database from file. If the file can not be read for
 --  some reason an error will be thrown.
 fromFile :: FilePath -> IO (Maybe IDDB)
-fromFile = liftM (parseDb . fromRep) . BS.readFile
+fromFile = liftM parseDb . readFile
 
 -- |Construct a database from the list of companies available at
 --  <http://www.usb.org/developers/tools/comp_dump>. The website
@@ -54,8 +55,8 @@ fromFile = liftM (parseDb . fromRep) . BS.readFile
 --  a day is probably overkill.
 fromWeb :: IO (Maybe IDDB)
 fromWeb = liftM ( either (const Nothing)
-                                     (parseDb . fromRep)
-                            ) $ openURI dbURL
+                         parseDb
+                ) $ openURIString dbURL
 
 staticDbPath :: FilePath
 staticDbPath = "usb_dot_org_db.txt"
