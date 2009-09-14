@@ -93,11 +93,11 @@ instance Binary IDDB where
                                         , IM.IntMap ProductDB
                                         , ClassDB
                                         )
-             return $ IDDB { dbVendorNameId = a
-                           , dbVendorIdName = b
-                           , dbProducts     = c
-                           , dbClasses      = d
-                           }
+             return IDDB { dbVendorNameId = a
+                         , dbVendorIdName = b
+                         , dbProducts     = c
+                         , dbClasses      = d
+                         }
 
 -------------------------------------------------------------------------------
 -- Query database
@@ -116,7 +116,7 @@ productId :: IDDB -> VendorID -> ProductName -> Maybe ProductID
 productId db vid name = MP.lookup name . fst =<< IM.lookup vid (dbProducts db)
 
 className :: IDDB -> ClassID -> Maybe ClassName
-className db cid = fmap fst $ IM.lookup cid $ dbClasses db
+className db cid = fmap fst . IM.lookup cid $ dbClasses db
 
 subClassName :: IDDB -> ClassID -> SubClassID -> Maybe SubClassName
 subClassName db cid scid = fmap fst $   IM.lookup scid . snd

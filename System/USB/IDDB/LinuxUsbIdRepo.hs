@@ -5,7 +5,7 @@ module System.USB.IDDB.LinuxUsbIdRepo
     , fromWeb
     ) where
 
-import Control.Monad        (liftM)
+import Control.Monad        (fmap)
 import Data.Maybe           (fromJust)
 import Network.Download     (openURIString)
 import Numeric              (readHex)
@@ -71,7 +71,7 @@ dbParser = do spaces
                         products <- many productParser
                         return ( vid
                                , name
-                               , ( MP.fromList $ map swap products
+                               , ( MP.fromList $ fmap swap products
                                  , IM.fromList products
                                  )
                                )
@@ -118,15 +118,15 @@ dbParser = do spaces
 -- |Construct a database from the data available at
 -- <http://linux-usb.org/usb.ids>.
 fromWeb :: IO (Maybe IDDB)
-fromWeb = liftM ( either (const Nothing)
-                         parseDb
-                ) $ openURIString dbURL
+fromWeb = fmap ( either (const Nothing)
+                        parseDb
+               ) $ openURIString dbURL
 
 fromFile :: FilePath -> IO (Maybe IDDB)
-fromFile = liftM parseDb . readFile
+fromFile = fmap parseDb . readFile
 
 staticDb :: IO IDDB
-staticDb = getDataFileName staticDbPath >>= liftM fromJust . fromFile
+staticDb = getDataFileName staticDbPath >>= fmap fromJust . fromFile
 
 staticDbPath :: FilePath
 staticDbPath = "usb_id_repo_db.txt"
