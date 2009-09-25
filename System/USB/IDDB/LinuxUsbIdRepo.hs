@@ -122,9 +122,13 @@ fromWeb = fmap ( either (const Nothing)
                         parseDb
                ) $ openURIString dbURL
 
+-- |Load a vendor database from file. If the file can not be read for
+-- some reason an error will be thrown.
 fromFile :: FilePath -> IO (Maybe IDDB)
 fromFile = fmap parseDb . readFile
 
+-- |Load a database from a snapshot of the linux-usb.org database which is
+--  supplied with the package.
 staticDb :: IO IDDB
 staticDb = getDataFileName staticDbPath >>= fmap fromJust . fromFile
 

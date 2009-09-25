@@ -3,6 +3,7 @@
 module System.USB.IDDB.Base
     ( IDDB(..)
 
+    , ID,         Name
     , VendorID,   VendorName
     , ProductID,  ProductName,  ProductDB
     , ClassID,    ClassName,    ClassDB

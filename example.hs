@@ -1,7 +1,7 @@
 module Main where
 
 import System.USB.IDDB
-import System.USB.IDDB.LinuxUsbIdRepo
+import System.USB.IDDB.LinuxUsbIdRepo (staticDb)
 import Text.Printf (printf)
 
 
@@ -15,7 +15,7 @@ main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
 
           -- Print the ID of "Linux Foundation"
           putStrLn $ maybe "unknown vendor name!" (printf "0x%04x")
-                   $ vendorId db ("Linux Foundation")
+                   $ vendorId db "Linux Foundation"
 
           -- Print the name of the product with ID 0x0101 from the
           -- vendor with ID 0x1d6b.
@@ -25,4 +25,4 @@ main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
           -- Print the ID of the product with the name "Audio Gadget"
           -- from the vendor with ID 0x1d6b.
           putStrLn $ maybe "unknown product name!" (printf "0x%04x")
-                   $ productId db 0x1d6b ("Audio Gadget")
+                   $ productId db 0x1d6b "Audio Gadget"
