@@ -5,23 +5,19 @@ module System.USB.IDDB.UsbDotOrg
     , fromWeb
     ) where
 
-import Control.Monad        (fmap)
-import Data.Maybe           (fromJust)
-import Network.Download     (openURIString)
+import Control.Monad        ( fmap )
+import Data.Maybe           ( fromJust )
+import Network.Download     ( openURIString )
 import Parsimony
-import Parsimony.Char       (char, digit)
-import System.IO            (FilePath, readFile)
-import System.USB.IDDB.Base ( IDDB(..)
-                            , VendorID, VendorName
+import Parsimony.Char       ( char, digit )
+import System.IO            ( FilePath, readFile )
+import System.USB.IDDB.Base ( IDDB(..), VendorID, VendorName
                             , getDataFileName
                             )
-import System.USB.IDDB.Misc ( eitherMaybe
-                            , swap
-                            , restOfLine
-                            )
+import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
-import qualified Data.IntMap as IM (fromList, empty)
-import qualified Data.Map    as MP (fromList)
+import qualified Data.IntMap as IM ( fromList, empty )
+import qualified Data.Map    as MP ( fromList )
 
 
 -- |Construct a database from a string in the format used by usb.org.

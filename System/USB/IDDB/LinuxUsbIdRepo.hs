@@ -5,30 +5,32 @@ module System.USB.IDDB.LinuxUsbIdRepo
     , fromWeb
     ) where
 
-import Control.Monad        (fmap)
-import Data.Maybe           (fromJust)
-import Network.Download     (openURIString)
-import Numeric              (readHex)
+import Control.Monad        ( fmap )
+import Data.List            ( lines, unlines, isPrefixOf )
+import Data.Maybe           ( fromJust )
+import Network.Download     ( openURIString )
+import Numeric              ( readHex )
 import Parsimony
-import Parsimony.Char       (char, hexDigit, spaces, tab)
-import System.IO            (FilePath, readFile)
+import Parsimony.Char       ( char, hexDigit, spaces, tab )
+import System.IO            ( FilePath, readFile )
 import System.USB.IDDB.Base
-import System.USB.IDDB.Misc (eitherMaybe, swap, restOfLine)
+import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
-import qualified Data.IntMap as IM (IntMap, fromList)
-import qualified Data.Map    as MP (Map,    fromList)
+import qualified Data.IntMap as IM ( IntMap, fromList )
+import qualified Data.Map    as MP ( Map,    fromList )
 
 
 -- |Construct a database from a string in the format used by
 -- <http://linux-usb.org>.
 parseDb :: String -> Maybe IDDB
-parseDb = eitherMaybe . parse dbParser
+parseDb = eitherMaybe . parse dbParser . stripComments
+    where
+      stripComments :: String -> String
+      stripComments = unlines . filter (not . isPrefixOf "#") . lines
 
 dbParser :: Parser String IDDB
 dbParser = do spaces
-              comments
               (vendorNameId, vendorIdName, productDB) <- lexeme vendorSection
-              comments
               classDB <- classSection
 
               return IDDB { dbVendorNameId = vendorNameId
@@ -41,12 +43,6 @@ dbParser = do spaces
       lexeme p = do x <- p
                     spaces
                     return x
-
-      comment :: Parser String String
-      comment = char '#' >> restOfLine
-
-      comments :: Parser String [String]
-      comments = many $ lexeme comment
 
       hexId :: Num n => Int -> Parser String n
       hexId d = do ds <- count d hexDigit

@@ -24,13 +24,13 @@ module System.USB.IDDB.Base
     )
     where
 
-import Data.Binary (Binary(..), Get)
+import Data.Binary ( Binary(..), Get )
 
 import qualified Data.IntMap as IM
 import qualified Data.Map    as MP
 
 #ifdef BUILD_WITH_CABAL
-import Paths_usb_id_database (getDataFileName)
+import Paths_usb_id_database ( getDataFileName )
 #else
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName = return
