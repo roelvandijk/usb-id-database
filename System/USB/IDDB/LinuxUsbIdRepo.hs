@@ -2,124 +2,137 @@ module System.USB.IDDB.LinuxUsbIdRepo
     ( parseDb
     , staticDb
     , fromFile
-    , fromWeb
+    , dbURL
     ) where
 
+import Control.Arrow        ( second )
 import Control.Monad        ( fmap )
+import Data.Char            ( isSpace )
 import Data.List            ( lines, unlines, isPrefixOf )
 import Data.Maybe           ( fromJust )
-import Network.Download     ( openURIString )
 import Numeric              ( readHex )
 import Parsimony
-import Parsimony.Char       ( char, hexDigit, spaces, tab )
+import Parsimony.Char       ( char, string, hexDigit, tab )
 import System.IO            ( FilePath, readFile )
 import System.USB.IDDB.Base
 import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
-import qualified Data.IntMap as IM ( IntMap, fromList )
-import qualified Data.Map    as MP ( Map,    fromList )
-
+import qualified Data.IntMap as IM
+import qualified Data.Map    as MP
 
 -- |Construct a database from a string in the format used by
 -- <http://linux-usb.org>.
 parseDb :: String -> Maybe IDDB
-parseDb = eitherMaybe . parse dbParser . stripComments
+parseDb = eitherMaybe . parse dbParser . stripBoring
+
+-- |Remove comments and empty lines.
+stripBoring :: String -> String
+stripBoring = unlines
+            . filter (\xs -> not (isComment xs) && not (isEmpty xs))
+            . lines
     where
-      stripComments :: String -> String
-      stripComments = unlines . filter (not . isPrefixOf "#") . lines
+      isComment :: String -> Bool
+      isComment = isPrefixOf "#"
+
+      isEmpty :: String -> Bool
+      isEmpty = all isSpace
 
 dbParser :: Parser String IDDB
-dbParser = do spaces
-              (vendorNameId, vendorIdName, productDB) <- lexeme vendorSection
-              classDB <- classSection
+dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
+              classDB <- genericSection (label "C") 2 id
+                         . genericSection tab 2 id
+                           . genericSection (count 2 tab) 2 fst
+                             $ return ()
+              actDB   <- simpleSection "AT" 4
+              _       <- simpleSection "HID" 2
+              _       <- simpleSection "R" 2
+              _       <- simpleSection "BIAS" 1
+              _       <- simpleSection "PHY" 2
+              _       <- genericSection (label "HUT") 2 id
+                         . genericSection tab 3 fst
+                           $ return ()
+              langDB  <- genericSection (label "L") 4 id
+                         . genericSection tab 2 fst
+                           $ return ()
+              _       <- simpleSection "HCC" 2
+              _       <- simpleSection "VT" 4
 
               return IDDB { dbVendorNameId = vendorNameId
                           , dbVendorIdName = vendorIdName
                           , dbProducts     = productDB
                           , dbClasses      = classDB
+                          , dbACT          = actDB
+                          , dbLanguages    = langDB
                           }
     where
-      lexeme :: Parser String a -> Parser String a
-      lexeme p = do x <- p
-                    spaces
-                    return x
-
       hexId :: Num n => Int -> Parser String n
       hexId d = do ds <- count d hexDigit
                    case readHex ds of
                      [(n, _)]  -> return n
                      _         -> error "impossible"
 
-      vendorSection :: Parser String ( MP.Map VendorName VendorID
-                                     , IM.IntMap VendorName
+      label :: String -> Parser String ()
+      label n = string n >> char ' ' >> return ()
+
+      -- Top level section without subsections.
+      simpleSection :: String -> Int -> Parser String (IM.IntMap String)
+      simpleSection sym idSize = genericSection (string sym >> char ' ')
+                                                idSize fst $ return ()
+
+      genericSection :: (Parser String p)
+                     -> Int
+                     -> ((String, s) -> r)
+                     -> Parser String s
+                     -> Parser String (IM.IntMap r)
+      genericSection prefix idSize convert =
+          fmap (IM.fromList . map (second convert))
+          . many . try . genericItem prefix idSize
+
+      genericItem :: (Parser String p)
+                  -> Int
+                  -> Parser String s
+                  -> Parser String (Int, (String, s))
+      genericItem prefix idSize sub = do
+          _        <- prefix
+          itemId   <- hexId idSize
+          _        <- count 2 $ char ' '
+          itemName <- restOfLine
+          s        <- sub
+          return (itemId, (itemName, s))
+
+      vendorSection :: Parser String ( MP.Map String Int
+                                     , IM.IntMap String
                                      , IM.IntMap ProductDB
                                      )
-      vendorSection = do xs <- lexeme $ many vendorParser
-                         return ( MP.fromList [(name, vid) | (vid, name, _)   <- xs]
-                                , IM.fromList [(vid, name) | (vid, name, _)   <- xs]
-                                , IM.fromList [(vid, pdb)  | (vid, _,    pdb) <- xs]
-                                )
+      vendorSection = do
+        xs <- many (try (vendorParser <?> "vendor"))
+        return ( MP.fromList [(name, vid) | (vid, name, _)   <- xs]
+               , IM.fromList [(vid, name) | (vid, name, _)   <- xs]
+               , IM.fromList [(vid, pdb)  | (vid, _,    pdb) <- xs]
+               )
 
-      vendorParser :: Parser String (VendorID, VendorName, ProductDB)
-      vendorParser = do vid  <- hexId 4
-                        count 2 $ char ' '
-                        name <- restOfLine
-                        products <- many productParser
-                        return ( vid
-                               , name
-                               , ( MP.fromList $ fmap swap products
-                                 , IM.fromList products
-                                 )
-                               )
+      vendorParser :: Parser String (Int, String, ProductDB)
+      vendorParser = do
+        vid      <- hexId 4
+        _        <- count 2 $ char ' '
+        name     <- restOfLine
+        products <- many (productParser <?> "product")
+        return ( vid
+               , name
+               , ( MP.fromList $ fmap swap products
+                 , IM.fromList products
+                 )
+               )
 
-      productParser :: Parser String (ProductID, ProductName)
-      productParser = do tab
+      productParser :: Parser String (Int, String)
+      productParser = do _    <- tab
                          pid  <- hexId 4
-                         count 2 $ char ' '
+                         _    <- count 2 $ char ' '
                          name <- restOfLine
                          return (pid, name)
 
-      classSection :: Parser String ClassDB
-      classSection = do xs <- lexeme $ many classParser
-                        return $ IM.fromList xs
-
-      classParser :: Parser String (ClassID, (ClassName, SubClassDB))
-      classParser = do char 'C'
-                       char ' '
-                       cid  <- hexId 2
-                       count 2 $ char ' '
-                       name <- restOfLine
-                       subClasses <- many subClassParser
-                       return ( cid
-                              , (name, IM.fromList subClasses)
-                              )
-
-      subClassParser :: Parser String (SubClassID, (SubClassName, ProtocolDB))
-      subClassParser = do tab
-                          scid <- hexId 2
-                          count 2 $ char ' '
-                          name <- restOfLine
-                          protocols <- many (try protocolParser)
-                          return ( scid
-                                 , (name, IM.fromList protocols)
-                                 )
-
-      protocolParser :: Parser String (ProtocolID, ProtocolName)
-      protocolParser = do count 2 tab
-                          protId <- hexId 2
-                          count 2 $ char ' '
-                          name <- restOfLine
-                          return (protId, name)
-
--- |Construct a database from the data available at
--- <http://linux-usb.org/usb.ids>.
-fromWeb :: IO (Maybe IDDB)
-fromWeb = fmap ( either (const Nothing)
-                        parseDb
-               ) $ openURIString dbURL
-
--- |Load a vendor database from file. If the file can not be read for
--- some reason an error will be thrown.
+-- |Load a vendor database from file. If the file can not be read for some
+-- reason an error will be thrown.
 fromFile :: FilePath -> IO (Maybe IDDB)
 fromFile = fmap parseDb . readFile
 

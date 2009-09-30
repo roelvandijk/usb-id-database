@@ -1,5 +1,5 @@
 name:          usb-id-database
-version:       0.3.0.1
+version:       0.4
 cabal-version: >=1.6
 build-type:    Simple
 stability:     provisional
@@ -11,8 +11,8 @@ license-file:  LICENSE
 category:      System
 synopsis:      A database of USB identifiers
 description:
-  Functions to find the names associated with numerical vendor and
-  product identifiers.
+  Functions to find the names associated with various identifiers from the USB
+  specification.
 
 extra-source-files: example.hs
 data-files: usb_dot_org_db.txt
@@ -31,7 +31,6 @@ library
                , binary      == 0.5.*
                , bytestring  == 0.9.*
                , containers  == 0.2.*
-               , download    == 0.3.*
                , parsimony   >= 1 && < 1.1
   ghc-options: -Wall
   cpp-options: -DBUILD_WITH_CABAL

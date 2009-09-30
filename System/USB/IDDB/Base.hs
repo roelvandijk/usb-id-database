@@ -3,12 +3,8 @@
 module System.USB.IDDB.Base
     ( IDDB(..)
 
-    , ID,         Name
-    , VendorID,   VendorName
-    , ProductID,  ProductName,  ProductDB
-    , ClassID,    ClassName,    ClassDB
-    , SubClassID, SubClassName, SubClassDB
-    , ProtocolID, ProtocolName, ProtocolDB
+    , ProductDB
+    , ClassDB, SubClassDB, ProtocolDB
 
     , emptyDb
 
@@ -19,6 +15,9 @@ module System.USB.IDDB.Base
     , className
     , subClassName
     , protocolName
+    , audioClassTerminalTypeName
+    , langName
+    , subLangName
 
     , getDataFileName
     )
@@ -40,34 +39,22 @@ getDataFileName = return
 -- Types
 -------------------------------------------------------------------------------
 
-type ID          = Int
-type Name        = String
-
-type VendorID    = ID
-type ProductID   = ID
-type ClassID     = ID
-type SubClassID  = ID
-type ProtocolID  = ID
-
-type VendorName   = Name
-type ProductName  = Name
-type ClassName    = Name
-type SubClassName = Name
-type ProtocolName = Name
-
-type ProductDB  = ( MP.Map ProductName ProductID
-                  , IM.IntMap ProductName
+type ProductDB  = ( MP.Map String Int
+                  , IM.IntMap String
                   )
-type ClassDB    = IM.IntMap (ClassName, SubClassDB)
-type SubClassDB = IM.IntMap (SubClassName, ProtocolDB)
-type ProtocolDB = IM.IntMap ProtocolName
+type ClassDB    = IM.IntMap (String, SubClassDB)
+type SubClassDB = IM.IntMap (String, ProtocolDB)
+type ProtocolDB = IM.IntMap String
+type LanguageDB = IM.IntMap (String, IM.IntMap String)
 
 -- |A database of USB identifiers. Contains both vendor identifiers
 -- and product identifiers.
-data IDDB = IDDB { dbVendorNameId :: MP.Map VendorName VendorID
-                 , dbVendorIdName :: IM.IntMap VendorName
+data IDDB = IDDB { dbVendorNameId :: MP.Map String Int
+                 , dbVendorIdName :: IM.IntMap String
                  , dbProducts     :: IM.IntMap ProductDB
                  , dbClasses      :: ClassDB
+                 , dbACT          :: IM.IntMap String
+                 , dbLanguages    :: LanguageDB
                  }
 
 -- |An empty database.
@@ -76,6 +63,8 @@ emptyDb = IDDB { dbVendorNameId = MP.empty
                , dbVendorIdName = IM.empty
                , dbProducts     = IM.empty
                , dbClasses      = IM.empty
+               , dbACT          = IM.empty
+               , dbLanguages    = IM.empty
                }
 
 -------------------------------------------------------------------------------
@@ -87,45 +76,87 @@ instance Binary IDDB where
                  , dbVendorIdName db
                  , dbProducts     db
                  , dbClasses      db
+                 , dbACT          db
+                 , dbLanguages    db
                  )
 
-    get = do (a, b, c, d) <- get :: Get ( MP.Map VendorName VendorID
-                                        , IM.IntMap VendorName
-                                        , IM.IntMap ProductDB
-                                        , ClassDB
-                                        )
+    get = do (a, b, c, d, e, f) <- get'
              return IDDB { dbVendorNameId = a
                          , dbVendorIdName = b
                          , dbProducts     = c
                          , dbClasses      = d
+                         , dbACT          = e
+                         , dbLanguages    = f
                          }
+        where get' :: Get ( MP.Map String Int
+                          , IM.IntMap String
+                          , IM.IntMap ProductDB
+                          , ClassDB
+                          , IM.IntMap String
+                          , LanguageDB
+                          )
+              get' = get
 
 -------------------------------------------------------------------------------
 -- Query database
 -------------------------------------------------------------------------------
 
-vendorName :: IDDB -> VendorID -> Maybe VendorName
+vendorName :: IDDB
+           -> Int -- ^Vendor Id
+           -> Maybe String
 vendorName db vid = IM.lookup vid $ dbVendorIdName db
 
-vendorId :: IDDB -> VendorName -> Maybe VendorID
+vendorId :: IDDB
+         -> String -- ^Vendor name
+         -> Maybe Int
 vendorId db name = MP.lookup name $ dbVendorNameId db
 
-productName :: IDDB -> VendorID -> ProductID -> Maybe ProductName
+productName :: IDDB
+            -> Int -- ^Vendor Id
+            -> Int -- ^Product Id
+            -> Maybe String
 productName db vid pid = IM.lookup pid . snd =<< IM.lookup vid (dbProducts db)
 
-productId :: IDDB -> VendorID -> ProductName -> Maybe ProductID
+productId :: IDDB
+          -> Int    -- ^Vendor Id
+          -> String -- ^Product name
+          -> Maybe Int
 productId db vid name = MP.lookup name . fst =<< IM.lookup vid (dbProducts db)
 
-className :: IDDB -> ClassID -> Maybe ClassName
+className :: IDDB
+          -> Int -- ^Class Id
+          -> Maybe String
 className db cid = fmap fst . IM.lookup cid $ dbClasses db
 
-subClassName :: IDDB -> ClassID -> SubClassID -> Maybe SubClassName
+subClassName :: IDDB
+             -> Int -- ^Class Id
+             -> Int -- ^Sub class Id
+             -> Maybe String
 subClassName db cid scid = fmap fst $   IM.lookup scid . snd
                                     =<< IM.lookup cid (dbClasses db)
 
-protocolName :: IDDB -> ClassID -> SubClassID -> ProtocolID -> Maybe ProtocolName
+protocolName :: IDDB
+             -> Int -- ^Class Id
+             -> Int -- ^Sub class Id
+             -> Int -- ^Protocol Id
+             -> Maybe String
 protocolName db cid scid protId =   IM.lookup protId . snd
                                 =<< IM.lookup scid   . snd
                                 =<< IM.lookup cid (dbClasses db)
 
+audioClassTerminalTypeName :: IDDB
+                           -> Int -- ^Audio class terminal type Id
+                           -> Maybe String
+audioClassTerminalTypeName db actid = IM.lookup actid (dbACT db)
 
+langName :: IDDB
+         -> Int -- ^Primary language Id
+         -> Maybe String
+langName db lid = fmap fst . IM.lookup lid $ dbLanguages db
+
+subLangName :: IDDB
+            -> Int -- ^Primary language Id
+            -> Int -- ^Sub language Id
+            -> Maybe String
+subLangName db lid slid =   IM.lookup slid . snd
+                        =<< IM.lookup lid (dbLanguages db)

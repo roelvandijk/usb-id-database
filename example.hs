@@ -35,3 +35,12 @@ main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
 
           putStrLn $ maybe "unknown protocol" id
                    $ protocolName db 0xe0 1 2
+
+          putStrLn $ maybe "unknown audio class terminal type" id
+                   $ audioClassTerminalTypeName db 0x0301
+
+          putStrLn $ maybe "unknown language" id
+                   $ langName db 0x14
+
+          putStrLn $ maybe "unknown sub language" id
+                   $ subLangName db 0x14 1

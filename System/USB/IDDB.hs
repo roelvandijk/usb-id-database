@@ -1,7 +1,10 @@
 {-| A database of USB identifiers.
 
 Databases with vendor names and identifiers can be loaded from string,
-file or directly from <http://www.usb.org> or <http://linux-usb.org>.
+file or directly from
+<http://www.usb.org>
+or
+<http://linux-usb.org>.
 
 Example usage:
 
@@ -45,13 +48,6 @@ module System.USB.IDDB
     ( -- *Types
       IDDB
 
-    , ID,         Name
-    , VendorID,   VendorName
-    , ProductID,  ProductName
-    , ClassID,    ClassName
-    , SubClassID, SubClassName
-    , ProtocolID, ProtocolName
-
     , emptyDb
 
       -- *Query database
@@ -62,6 +58,9 @@ module System.USB.IDDB
     , className
     , subClassName
     , protocolName
+    , audioClassTerminalTypeName
+    , langName
+    , subLangName
     )
     where
 
