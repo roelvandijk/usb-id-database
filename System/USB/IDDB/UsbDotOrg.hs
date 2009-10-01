@@ -1,3 +1,5 @@
+{-| Functions to acquire a database from <http://www.usb.org>. -}
+
 module System.USB.IDDB.UsbDotOrg
     ( parseDb
     , staticDb
@@ -28,10 +30,17 @@ staticDbParser = do
   vendors <- many vendorParser
   return IDDB { dbVendorNameId = MP.fromList $ fmap swap vendors
               , dbVendorIdName = IM.fromList vendors
-              , dbProducts  = IM.empty
-              , dbClasses   = IM.empty
-              , dbACT       = IM.empty
-              , dbLanguages = IM.empty
+              , dbProducts     = IM.empty
+              , dbClasses      = IM.empty
+              , dbAudioCTType  = IM.empty
+              , dbVideoCTType  = IM.empty
+              , dbHIDDescType  = IM.empty
+              , dbHIDDescItem  = IM.empty
+              , dbHIDDescCCode = IM.empty
+              , dbHIDUsage     = IM.empty
+              , dbPhysDescBias = IM.empty
+              , dbPhysDescItem = IM.empty
+              , dbLanguages    = IM.empty
               }
     where
       vendorParser :: Parser String (Int, String)
@@ -48,10 +57,15 @@ fromFile = fmap parseDb . readFile
 staticDbPath :: FilePath
 staticDbPath = "usb_dot_org_db.txt"
 
-dbURL :: String
-dbURL = "http://www.usb.org/developers/tools/comp_dump"
-
 -- |Load a database from a snapshot of the usb.org database which is
 --  supplied with the package.
 staticDb :: IO IDDB
 staticDb = getDataFileName staticDbPath >>= fmap fromJust . fromFile
+
+-- |<http://www.usb.org/developers/tools/comp_dump>
+--
+-- The source of the database. Download this file for the most up-to-date
+-- version.
+dbURL :: String
+dbURL = "http://www.usb.org/developers/tools/comp_dump"
+

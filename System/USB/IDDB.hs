@@ -1,10 +1,13 @@
 {-| A database of USB identifiers.
 
-Databases with vendor names and identifiers can be loaded from string,
-file or directly from
+Databases with vendor names and identifiers can be loaded from string or file.
+
+To get the most up-to-date database download the files directly from
 <http://www.usb.org>
 or
 <http://linux-usb.org>.
+
+Each database's module contains an URL to the database file.
 
 Example usage:
 
@@ -59,6 +62,14 @@ module System.USB.IDDB
     , subClassName
     , protocolName
     , audioClassTerminalTypeName
+    , videoClassTerminalTypeName
+    , hidDescTypeName
+    , hidDescItemName
+    , hidDescCountryCodeName
+    , hidUsagePageName
+    , hidUsageName
+    , physicalDescBiasName
+    , physicalDescItemName
     , langName
     , subLangName
     )

@@ -19,7 +19,6 @@
 1060|SMSC
 1062|Integrated Device Technology
 1071|Molex Inc.
-1072|Fujitsu Component Limited
 1074|Unisys Corp.
 1080|Advanced Micro Devices
 1085|Lexmark International Inc.
@@ -230,7 +229,6 @@
 2554|Mtek Vision
 2578|Cambridge Silicon Radio Ltd.
 2580|Spacelabs Healthcare
-2582|Trek Technology (S) Pte Ltd
 2583|HOYA Corporation
 2593|Medtronic Physio Control Corp.
 2631|Hirose Electric
@@ -255,7 +253,6 @@
 2856|Kenwood Corporation
 2876|Olivetti S.p.A
 2894|Musical Electronics Ltd.
-2900|Sinbon Electronics Co., Ltd.
 2922|Maxim Integrated Products
 2965|ASIX Electronics Corporation
 2967|O2 Micro, Inc.
@@ -311,14 +308,12 @@
 3562|UTECH Electronic (D.G.) Co., Ltd.
 3607|Walex Electronic Ltd.
 3619|Liou Yuane International Ltd.
-3636|Micro Computer Control Corp.
 3641|Smart Modular Technologies, Inc.
 3642|Neostar Technology Co., Ltd.
 3675|Union Power Information Industrial Co., Ltd.
 3677|Neltron Industrial Co., Ltd.
 3690|Megawin Technology Co., Ltd.
 3698|Hsi-Chin Electronics Co., Ltd.
-3714|Ching Tai Electric Wire & Cable Co., Ltd.
 3715|Shin An Wire & Cable Co.
 3724|Well Force Electronic Co., Ltd
 3725|MediaTek Inc.
@@ -348,7 +343,6 @@
 4027|Bitwise Systems, Inc.
 4046|Sony Ericsson Mobile Communications AB
 4087|CHI SHING COMPUTER ACCESSORIES CO., LTD.
-4100|LG Electronics Inc.
 4134|Newly Corporation
 4168|Targus Group International
 4172|AMCO TEC International Inc.
@@ -388,6 +382,7 @@
 4716|Aristocrat Technologies
 4717|Bel Stewart
 4721|Foxda Technology Industrial (Shenzhen) Co., Ltd.
+4742|MARVELL SEMICONDUCTOR, INC.
 4756|RISO KAGAKU CORP.
 4779|Honey Bee Electronic International Ltd.
 4792|Zhejiang Xinya Electronic Technology Co., Ltd.
@@ -441,7 +436,6 @@
 5488|ALLTOP TECHNOLOGY CO., LTD.
 5499|Ketron SRL
 5510|Sitor Electronics (Shenzhen) Co., Ltd.
-5517|Oakley Inc.
 5528|Kunshan Guoji Electronics Co., Ltd.
 5538|Freescale Semiconductor, Inc.
 5546|Gearway Electronics (Dong Guan) Co., Ltd.
@@ -480,7 +474,6 @@
 6133|K.K. Rocky
 6134|Unicomp, Inc
 6193|Gwo Jinn Industries Co., Ltd.
-6194|Huizhou Shenghua Industrial Co., Ltd.
 6228|Memory Devices Ltd.
 6242|Teridian Semiconductor Corp.
 6257|Aveo Technology Corp.
@@ -502,7 +495,6 @@
 6537|Nuconn Technology Corp.
 6541|Fairchild Imaging
 6556|Richnex Microelectronics Corporation
-6568|Biforst Technology Inc.
 6607|Parrot SA
 6632|Industrial Technology Research Institute
 6639|Pak Heng Technology (Shenzhen) Co., Ltd.
@@ -559,9 +551,7 @@
 7329|Symwave, Inc.
 7347|Aces Electronic Co., Ltd.
 7348|OPEX CORPORATION
-7358|Texas Instruments - Stellaris
 7359|FORTAT SKYMARK INDUSTRIAL COMPANY
-7360|PlantSense
 7370|NextWave Broadband Inc.
 7390|Telecommunications Technology Association (TTA)
 7391|WonTen Technology Co., Ltd.
@@ -618,15 +608,7 @@
 7911|EPCOS
 7912|ONDA COMMUNICATION S.p.a.
 7913|PC PARTNER LIMITED
-7936|YUEQING ZHONGLI COMPUTER ELECTRONICS CO., LTD.
-7950|Inflexis Corporation
-7951|Action Technology (SZ) Co., Ltd.
-7952|LTW TECHNOLOGY CO., LTD.
-7953|VIRAGE LOGIC
-7954|Photometrics
 7958|Olidata SpA
-7965|How Weih Precision Metal (Shenzhen) Co., Ltd.
-7968|Shenzhen Tenwei Electronics Co., Ltd.
 7977|Analogix Semiconductor, Inc.
 7985|SASKEN COMMUNICATION TECH LTD.
 7989|Amphenol Shouh Min Industry
@@ -697,4 +679,7 @@
 8457|VIA Labs, Inc.
 8469|Alliance Material Co., Ltd.
 8470|KT Tech Inc.
+8492|Shenzhen Linoya Electronic Co., Ltd.
+8493|Dong Guan City Marubeni Electronic Co., Ltd.
+8494|Amphenol AssembleTech (Xiamen) Co., Ltd.
 8888|Motorola MDS

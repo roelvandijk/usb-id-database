@@ -26,21 +26,3 @@ main = do -- Load a snapshot from the linux-usb.sourceforget.net database.
           -- from the vendor with ID 0x1d6b.
           putStrLn $ maybe "unknown product name!" (printf "0x%04x")
                    $ productId db 0x1d6b "Audio Gadget"
-
-          putStrLn $ maybe "unknown class" id
-                   $ className db 0xe0
-
-          putStrLn $ maybe "unknown subclass" id
-                   $ subClassName db 0xe0 1
-
-          putStrLn $ maybe "unknown protocol" id
-                   $ protocolName db 0xe0 1 2
-
-          putStrLn $ maybe "unknown audio class terminal type" id
-                   $ audioClassTerminalTypeName db 0x0301
-
-          putStrLn $ maybe "unknown language" id
-                   $ langName db 0x14
-
-          putStrLn $ maybe "unknown sub language" id
-                   $ subLangName db 0x14 1

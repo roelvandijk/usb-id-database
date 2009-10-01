@@ -1,3 +1,5 @@
+{-| Functions to acquire a database from <http://linux-usb.org>. -}
+
 module System.USB.IDDB.LinuxUsbIdRepo
     ( parseDb
     , staticDb
@@ -30,12 +32,12 @@ stripBoring :: String -> String
 stripBoring = unlines
             . filter (\xs -> not (isComment xs) && not (isEmpty xs))
             . lines
-    where
-      isComment :: String -> Bool
-      isComment = isPrefixOf "#"
 
-      isEmpty :: String -> Bool
-      isEmpty = all isSpace
+isComment :: String -> Bool
+isComment = isPrefixOf "#"
+
+isEmpty :: String -> Bool
+isEmpty = all isSpace
 
 dbParser :: Parser String IDDB
 dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
@@ -43,26 +45,33 @@ dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
                          . genericSection tab 2 id
                            . genericSection (count 2 tab) 2 fst
                              $ return ()
-              actDB   <- simpleSection "AT" 4
-              _       <- simpleSection "HID" 2
-              _       <- simpleSection "R" 2
-              _       <- simpleSection "BIAS" 1
-              _       <- simpleSection "PHY" 2
-              _       <- genericSection (label "HUT") 2 id
+              at      <- simpleSection "AT" 4
+              hid     <- simpleSection "HID" 2
+              r       <- simpleSection "R" 2
+              bias    <- simpleSection "BIAS" 1
+              phy     <- simpleSection "PHY" 2
+              hut     <- genericSection (label "HUT") 2 id
                          . genericSection tab 3 fst
                            $ return ()
-              langDB  <- genericSection (label "L") 4 id
+              l       <- genericSection (label "L") 4 id
                          . genericSection tab 2 fst
                            $ return ()
-              _       <- simpleSection "HCC" 2
-              _       <- simpleSection "VT" 4
+              hcc     <- simpleSection "HCC" 2
+              vt      <- simpleSection "VT" 4
 
               return IDDB { dbVendorNameId = vendorNameId
                           , dbVendorIdName = vendorIdName
                           , dbProducts     = productDB
                           , dbClasses      = classDB
-                          , dbACT          = actDB
-                          , dbLanguages    = langDB
+                          , dbAudioCTType  = at
+                          , dbVideoCTType  = vt
+                          , dbHIDDescType  = hid
+                          , dbHIDDescItem  = r
+                          , dbHIDDescCCode = hcc
+                          , dbHIDUsage     = hut
+                          , dbPhysDescBias = bias
+                          , dbPhysDescItem = phy
+                          , dbLanguages    = l
                           }
     where
       hexId :: Num n => Int -> Parser String n
@@ -131,8 +140,8 @@ dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
                          name <- restOfLine
                          return (pid, name)
 
--- |Load a vendor database from file. If the file can not be read for some
--- reason an error will be thrown.
+-- |Load a database from file. If the file can not be read for some reason an
+-- error will be thrown.
 fromFile :: FilePath -> IO (Maybe IDDB)
 fromFile = fmap parseDb . readFile
 
@@ -140,9 +149,13 @@ fromFile = fmap parseDb . readFile
 --  supplied with the package.
 staticDb :: IO IDDB
 staticDb = getDataFileName staticDbPath >>= fmap fromJust . fromFile
+    where
+      staticDbPath :: FilePath
+      staticDbPath = "usb_id_repo_db.txt"
 
-staticDbPath :: FilePath
-staticDbPath = "usb_id_repo_db.txt"
-
+-- |<http://linux-usb.org/usb.ids>
+--
+-- The source of the database. Download this file for the most up-to-date
+-- version.
 dbURL :: String
 dbURL = "http://linux-usb.org/usb.ids"
