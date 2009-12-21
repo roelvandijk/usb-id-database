@@ -1,63 +1,92 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE UnicodeSyntax #-}
+
 {-| Functions to acquire a database from <http://linux-usb.org>. -}
 
 module System.USB.IDDB.LinuxUsbIdRepo
-    ( parseDb
+    ( -- * Parsing
+      parseDb
+      -- * Acquiring a database
     , staticDb
     , fromFile
     , dbURL
     ) where
 
-import Control.Arrow        ( second )
-import Control.Monad        ( fmap )
-import Data.Char            ( isSpace )
-import Data.List            ( lines, unlines, isPrefixOf )
-import Data.Maybe           ( fromJust )
-import Numeric              ( readHex )
-import Parsimony
-import Parsimony.Char       ( char, string, hexDigit, tab )
-import System.IO            ( FilePath, readFile )
-import System.USB.IDDB.Base
-import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
+-------------------------------------------------------------------------------
+-- Imports
+-------------------------------------------------------------------------------
+
+-- base
+import Control.Arrow        ( second )
+import Control.Monad        ( (>>=), (>>), fail, fmap, return )
+import Data.Bool            ( Bool, not )
+import Data.Char            ( String, isSpace )
+import Data.Function        ( ($), id )
+import Data.Int             ( Int )
+import Data.List            ( all, filter, map, isPrefixOf, lines, unlines )
+import Data.Maybe           ( Maybe, fromJust )
+import Data.Tuple           ( fst )
+import Numeric              ( readHex )
+import Prelude              ( Num, error, fromInteger )
+import System.IO            ( IO, FilePath, readFile )
+
+-- base-unicode-symbols
+import Prelude.Unicode      ( (∘), (∧) )
+
+-- containers
 import qualified Data.IntMap as IM
 import qualified Data.Map    as MP
 
+-- parsimony
+import Parsimony
+import Parsimony.Char       ( char, string, hexDigit, tab )
+
+-- usb-id-database
+import System.USB.IDDB.Base
+import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
+
+
+-------------------------------------------------------------------------------
+-- Parsing
+-------------------------------------------------------------------------------
+
 -- |Construct a database from a string in the format used by
 -- <http://linux-usb.org>.
-parseDb :: String -> Maybe IDDB
-parseDb = eitherMaybe . parse dbParser . stripBoring
+parseDb ∷ String → Maybe IDDB
+parseDb = eitherMaybe ∘ parse dbParser ∘ stripBoring
 
 -- |Remove comments and empty lines.
-stripBoring :: String -> String
+stripBoring ∷ String → String
 stripBoring = unlines
-            . filter (\xs -> not (isComment xs) && not (isEmpty xs))
-            . lines
+            ∘ filter (\xs → not (isComment xs) ∧ not (isEmpty xs))
+            ∘ lines
 
-isComment :: String -> Bool
+isComment ∷ String → Bool
 isComment = isPrefixOf "#"
 
-isEmpty :: String -> Bool
+isEmpty ∷ String → Bool
 isEmpty = all isSpace
 
-dbParser :: Parser String IDDB
-dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
-              classDB <- genericSection (label "C") 2 id
-                         . genericSection tab 2 id
-                           . genericSection (count 2 tab) 2 fst
+dbParser ∷ Parser String IDDB
+dbParser = do (vendorNameId, vendorIdName, productDB) ← vendorSection
+              classDB ← genericSection (label "C") 2 id
+                         ∘ genericSection tab 2 id
+                           ∘ genericSection (count 2 tab) 2 fst
                              $ return ()
-              at      <- simpleSection "AT" 4
-              hid     <- simpleSection "HID" 2
-              r       <- simpleSection "R" 2
-              bias    <- simpleSection "BIAS" 1
-              phy     <- simpleSection "PHY" 2
-              hut     <- genericSection (label "HUT") 2 id
-                         . genericSection tab 3 fst
+              at      ← simpleSection "AT" 4
+              hid     ← simpleSection "HID" 2
+              r       ← simpleSection "R" 2
+              bias    ← simpleSection "BIAS" 1
+              phy     ← simpleSection "PHY" 2
+              hut     ← genericSection (label "HUT") 2 id
+                         ∘ genericSection tab 3 fst
                            $ return ()
-              l       <- genericSection (label "L") 4 id
-                         . genericSection tab 2 fst
+              l       ← genericSection (label "L") 4 id
+                         ∘ genericSection tab 2 fst
                            $ return ()
-              hcc     <- simpleSection "HCC" 2
-              vt      <- simpleSection "VT" 4
+              hcc     ← simpleSection "HCC" 2
+              vt      ← simpleSection "VT" 4
 
               return IDDB { dbVendorNameId = vendorNameId
                           , dbVendorIdName = vendorIdName
@@ -74,58 +103,58 @@ dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
                           , dbLanguages    = l
                           }
     where
-      hexId :: Num n => Int -> Parser String n
-      hexId d = do ds <- count d hexDigit
+      hexId ∷ Num n ⇒ Int → Parser String n
+      hexId d = do ds ← count d hexDigit
                    case readHex ds of
-                     [(n, _)]  -> return n
-                     _         -> error "impossible"
+                     [(n, _)]  → return n
+                     _         → error "impossible"
 
-      label :: String -> Parser String ()
+      label ∷ String → Parser String ()
       label n = string n >> char ' ' >> return ()
 
       -- Top level section without subsections.
-      simpleSection :: String -> Int -> Parser String (IM.IntMap String)
+      simpleSection ∷ String → Int → Parser String (IM.IntMap String)
       simpleSection sym idSize = genericSection (string sym >> char ' ')
                                                 idSize fst $ return ()
 
-      genericSection :: (Parser String p)
-                     -> Int
-                     -> ((String, s) -> r)
-                     -> Parser String s
-                     -> Parser String (IM.IntMap r)
+      genericSection ∷ (Parser String p)
+                     → Int
+                     → ((String, s) → r)
+                     → Parser String s
+                     → Parser String (IM.IntMap r)
       genericSection prefix idSize convert =
-          fmap (IM.fromList . map (second convert))
-          . many . try . genericItem prefix idSize
+          fmap (IM.fromList ∘ map (second convert))
+          ∘ many ∘ try ∘ genericItem prefix idSize
 
-      genericItem :: (Parser String p)
-                  -> Int
-                  -> Parser String s
-                  -> Parser String (Int, (String, s))
+      genericItem ∷ (Parser String p)
+                  → Int
+                  → Parser String s
+                  → Parser String (Int, (String, s))
       genericItem prefix idSize sub = do
-          _        <- prefix
-          itemId   <- hexId idSize
-          _        <- count 2 $ char ' '
-          itemName <- restOfLine
-          s        <- sub
+          _        ← prefix
+          itemId   ← hexId idSize
+          _        ← count 2 $ char ' '
+          itemName ← restOfLine
+          s        ← sub
           return (itemId, (itemName, s))
 
-      vendorSection :: Parser String ( MP.Map String Int
+      vendorSection ∷ Parser String ( MP.Map String Int
                                      , IM.IntMap String
                                      , IM.IntMap ProductDB
                                      )
       vendorSection = do
-        xs <- many (try (vendorParser <?> "vendor"))
-        return ( MP.fromList [(name, vid) | (vid, name, _)   <- xs]
-               , IM.fromList [(vid, name) | (vid, name, _)   <- xs]
-               , IM.fromList [(vid, pdb)  | (vid, _,    pdb) <- xs]
+        xs ← many (try (vendorParser <?> "vendor"))
+        return ( MP.fromList [(name, vid) | (vid, name, _)   ← xs]
+               , IM.fromList [(vid, name) | (vid, name, _)   ← xs]
+               , IM.fromList [(vid, pdb)  | (vid, _,    pdb) ← xs]
                )
 
-      vendorParser :: Parser String (Int, String, ProductDB)
+      vendorParser ∷ Parser String (Int, String, ProductDB)
       vendorParser = do
-        vid      <- hexId 4
-        _        <- count 2 $ char ' '
-        name     <- restOfLine
-        products <- many (productParser <?> "product")
+        vid      ← hexId 4
+        _        ← count 2 $ char ' '
+        name     ← restOfLine
+        products ← many (productParser <?> "product")
         return ( vid
                , name
                , ( MP.fromList $ fmap swap products
@@ -133,29 +162,34 @@ dbParser = do (vendorNameId, vendorIdName, productDB) <- vendorSection
                  )
                )
 
-      productParser :: Parser String (Int, String)
-      productParser = do _    <- tab
-                         pid  <- hexId 4
-                         _    <- count 2 $ char ' '
-                         name <- restOfLine
+      productParser ∷ Parser String (Int, String)
+      productParser = do _    ← tab
+                         pid  ← hexId 4
+                         _    ← count 2 $ char ' '
+                         name ← restOfLine
                          return (pid, name)
+
+
+-------------------------------------------------------------------------------
+-- Acquiring a database
+-------------------------------------------------------------------------------
 
 -- |Load a database from file. If the file can not be read for some reason an
 -- error will be thrown.
-fromFile :: FilePath -> IO (Maybe IDDB)
-fromFile = fmap parseDb . readFile
+fromFile ∷ FilePath → IO (Maybe IDDB)
+fromFile = fmap parseDb ∘ readFile
 
 -- |Load a database from a snapshot of the linux-usb.org database which is
---  supplied with the package.
-staticDb :: IO IDDB
-staticDb = getDataFileName staticDbPath >>= fmap fromJust . fromFile
+-- supplied with the package.
+staticDb ∷ IO IDDB
+staticDb = getDataFileName staticDbPath >>= fmap fromJust ∘ fromFile
     where
-      staticDbPath :: FilePath
+      staticDbPath ∷ FilePath
       staticDbPath = "usb_id_repo_db.txt"
 
 -- |<http://linux-usb.org/usb.ids>
 --
 -- The source of the database. Download this file for the most up-to-date
 -- version.
-dbURL :: String
+dbURL ∷ String
 dbURL = "http://linux-usb.org/usb.ids"
