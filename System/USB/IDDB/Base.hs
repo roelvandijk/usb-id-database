@@ -34,15 +34,15 @@ module System.USB.IDDB.Base
     where
 
 -- base
-import Control.Monad ( (=<<), fmap )
-import Data.Char     ( String )
-import Data.Function ( ($) )
-import Data.Int      ( Int )
-import Data.Maybe    ( Maybe )
-import Data.Tuple    ( fst, snd )
+import Control.Monad         ( (=<<), fmap )
+import Data.Char             ( String )
+import Data.Function         ( ($) )
+import Data.Int              ( Int )
+import Data.Maybe            ( Maybe )
+import Data.Tuple            ( fst, snd )
 
 -- base-unicode-symbols
-import Prelude.Unicode ( (∘) )
+import Data.Function.Unicode ( (∘) )
 
 -- containers
 import qualified Data.IntMap as IM

@@ -19,30 +19,31 @@ module System.USB.IDDB.LinuxUsbIdRepo
 -------------------------------------------------------------------------------
 
 -- base
-import Control.Arrow        ( second )
-import Control.Monad        ( (>>=), (>>), fail, fmap, return )
-import Data.Bool            ( Bool, not )
-import Data.Char            ( String, isSpace )
-import Data.Function        ( ($), id )
-import Data.Int             ( Int )
-import Data.List            ( all, filter, length, map
-                            , isPrefixOf, lines, unlines 
-                            )
-import Data.Maybe           ( Maybe, fromJust )
-import Data.Tuple           ( fst )
-import Numeric              ( readHex )
-import Prelude              ( Num, error, fromInteger, seq )
-import System.IO            ( IO, FilePath )
+import Control.Arrow         ( second )
+import Control.Monad         ( (>>=), (>>), fail, fmap, return )
+import Data.Bool             ( Bool, not )
+import Data.Char             ( String, isSpace )
+import Data.Function         ( ($), id )
+import Data.Int              ( Int )
+import Data.List             ( all, filter, length, map
+                             , isPrefixOf, lines, unlines 
+                             )
+import Data.Maybe            ( Maybe, fromJust )
+import Data.Tuple            ( fst )
+import Numeric               ( readHex )
+import Prelude               ( Num, error, fromInteger, seq )
+import System.IO             ( IO, FilePath )
 #if MIN_VERSION_base(4,2,0)
-import System.IO            ( IOMode(ReadMode)
-                            , withFile, hSetEncoding, latin1, hGetContents
-                            )
+import System.IO             ( IOMode(ReadMode)
+                             , withFile, hSetEncoding, latin1, hGetContents
+                             )
 #else
-import System.IO            ( readFile )
+import System.IO             ( readFile )
 #endif
 
 -- base-unicode-symbols
-import Prelude.Unicode      ( (∘), (∧) )
+import Data.Bool.Unicode     ( (∧) )
+import Data.Function.Unicode ( (∘) )
 
 -- containers
 import qualified Data.IntMap as IM
@@ -50,11 +51,11 @@ import qualified Data.Map    as MP
 
 -- parsimony
 import Parsimony
-import Parsimony.Char       ( char, string, hexDigit, tab )
+import Parsimony.Char        ( char, string, hexDigit, tab )
 
 -- usb-id-database
 import System.USB.IDDB.Base
-import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
+import System.USB.IDDB.Misc  ( eitherMaybe, swap, restOfLine )
 
 
 -------------------------------------------------------------------------------

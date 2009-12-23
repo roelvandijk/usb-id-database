@@ -33,7 +33,7 @@ source-repository head
 
 library
   build-depends: base                       >= 3.0.3.1 && < 4.3
-               , base-unicode-symbols       == 0.1.*
+               , base-unicode-symbols       >= 0.1.1   && < 0.2
                , bytestring                 == 0.9.*
                , containers                 <  0.4
                , containers-unicode-symbols == 0.1.*

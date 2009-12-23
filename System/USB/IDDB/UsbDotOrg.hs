@@ -18,16 +18,16 @@ module System.USB.IDDB.UsbDotOrg
 -------------------------------------------------------------------------------
 
 -- base
-import Control.Monad        ( (>>=), fail, fmap, return )
-import Data.Char            ( String )
-import Data.Function        ( ($) )
-import Data.Int             ( Int )
-import Data.Maybe           ( Maybe, fromJust )
-import System.IO            ( IO, FilePath, readFile )
-import Text.Read            ( read )
+import Control.Monad         ( (>>=), fail, fmap, return )
+import Data.Char             ( String )
+import Data.Function         ( ($) )
+import Data.Int              ( Int )
+import Data.Maybe            ( Maybe, fromJust )
+import System.IO             ( IO, FilePath, readFile )
+import Text.Read             ( read )
 
 -- base-unicode-symbols
-import Prelude.Unicode      ( (∘) )
+import Data.Function.Unicode ( (∘) )
 
 -- containers
 import qualified Data.IntMap as IM ( fromList )
@@ -38,11 +38,11 @@ import qualified Data.IntMap.Unicode as IM ( (∅) )
 
 -- parsimony
 import Parsimony
-import Parsimony.Char       ( char, digit )
+import Parsimony.Char        ( char, digit )
 
 -- usb-id-database
-import System.USB.IDDB.Base ( IDDB(..), getDataFileName )
-import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
+import System.USB.IDDB.Base  ( IDDB(..), getDataFileName )
+import System.USB.IDDB.Misc  ( eitherMaybe, swap, restOfLine )
 
 
 -------------------------------------------------------------------------------
