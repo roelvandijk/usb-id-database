@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
@@ -24,12 +25,21 @@ import Data.Bool            ( Bool, not )
 import Data.Char            ( String, isSpace )
 import Data.Function        ( ($), id )
 import Data.Int             ( Int )
-import Data.List            ( all, filter, map, isPrefixOf, lines, unlines )
+import Data.List            ( all, filter, length, map
+                            , isPrefixOf, lines, unlines 
+                            )
 import Data.Maybe           ( Maybe, fromJust )
 import Data.Tuple           ( fst )
 import Numeric              ( readHex )
-import Prelude              ( Num, error, fromInteger )
-import System.IO            ( IO, FilePath, readFile )
+import Prelude              ( Num, error, fromInteger, seq )
+import System.IO            ( IO, FilePath )
+#if MIN_VERSION_base(4,2,0)
+import System.IO            ( IOMode(ReadMode)
+                            , withFile, hSetEncoding, latin1, hGetContents
+                            )
+#else
+import System.IO            ( readFile )
+#endif
 
 -- base-unicode-symbols
 import Prelude.Unicode      ( (∘), (∧) )
@@ -177,7 +187,18 @@ dbParser = do (vendorNameId, vendorIdName, productDB) ← vendorSection
 -- |Load a database from file. If the file can not be read for some reason an
 -- error will be thrown.
 fromFile ∷ FilePath → IO (Maybe IDDB)
+#if MIN_VERSION_base(4,2,0)
+fromFile fp = withFile fp ReadMode 
+              $ \h → do hSetEncoding h latin1
+                        contents ← hGetContents h
+                        -- Bit ugly, but necessary to force the
+                        -- evaluation of contents before it is parsed
+                        -- as a database. Otherwise you'll get an
+                        -- empty database.
+                        length contents `seq` (return $ parseDb contents)
+#else
 fromFile = fmap parseDb ∘ readFile
+#endif
 
 -- |Load a database from a snapshot of the linux-usb.org database which is
 -- supplied with the package.

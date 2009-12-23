@@ -18,7 +18,7 @@ module System.USB.IDDB.UsbDotOrg
 -------------------------------------------------------------------------------
 
 -- base
-import Control.Monad        ( (>>=), (>>), fail, fmap, return )
+import Control.Monad        ( (>>=), fail, fmap, return )
 import Data.Char            ( String )
 import Data.Function        ( ($) )
 import Data.Int             ( Int )
@@ -73,7 +73,7 @@ staticDbParser = do
     where
       vendorParser ∷ Parser String (Int, String)
       vendorParser = do vid  ← many1 digit
-                        char '|'
+                        _    ← char '|'
                         name ← restOfLine
                         return (read vid, name)
 
