@@ -1,11 +1,11 @@
 name:          usb-id-database
-version:       0.4.0.3
+version:       0.4.0.4
 cabal-version: >=1.6
 build-type:    Simple
 stability:     provisional
 author:        Roel van Dijk <vandijk.roel@gmail.com>
 maintainer:    Roel van Dijk <vandijk.roel@gmail.com>
-copyright:     (c) 2009–2010 Roel van Dijk <vandijk.roel@gmail.com>
+copyright:     © 2009–2010 Roel van Dijk <vandijk.roel@gmail.com>
 license:       BSD3
 license-file:  LICENSE
 category:      System
@@ -28,10 +28,10 @@ source-repository head
   location: http://code.haskell.org/~roelvandijk/code/usb-id-database
 
 library
-  build-depends: base                       >= 3.0.3.1 && < 4.3
+  build-depends: base                       >= 3.0.3.1 && < 4.4
                , base-unicode-symbols       >= 0.1.1   && < 0.3
                , bytestring                 == 0.9.*
-               , containers                 <  0.4
+               , containers                 <  0.5
                , containers-unicode-symbols <  0.4
                , parsimony                  >= 1 && < 1.1
   ghc-options: -Wall
