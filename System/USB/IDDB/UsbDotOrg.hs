@@ -1,5 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE CPP
+           , NoImplicitPrelude
+           , UnicodeSyntax 
+  #-}
 
 {-| Functions to acquire a database from <http://www.usb.org>. -}
 
@@ -18,13 +20,17 @@ module System.USB.IDDB.UsbDotOrg
 -------------------------------------------------------------------------------
 
 -- base
-import Control.Monad         ( (>>=), fail, fmap, return )
+import Control.Monad         ( (>>=), fmap, return )
 import Data.Char             ( String )
 import Data.Function         ( ($) )
 import Data.Int              ( Int )
 import Data.Maybe            ( Maybe, fromJust )
 import System.IO             ( IO, FilePath, readFile )
 import Text.Read             ( read )
+
+#if __GLASGOW_HASKELL__ < 700
+import Control.Monad ( fail )
+#endif
 
 -- base-unicode-symbols
 import Data.Function.Unicode ( (∘) )

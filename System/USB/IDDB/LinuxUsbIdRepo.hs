@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE CPP
+           , NoImplicitPrelude
+           , UnicodeSyntax 
+  #-}
 
 {-| Functions to acquire a database from <http://linux-usb.org>. -}
 
@@ -20,7 +21,7 @@ module System.USB.IDDB.LinuxUsbIdRepo
 
 -- base
 import Control.Arrow         ( second )
-import Control.Monad         ( (>>=), (>>), fail, fmap, return )
+import Control.Monad         ( (>>=), (>>), fmap, return )
 import Data.Bool             ( Bool, not )
 import Data.Char             ( String, isSpace )
 import Data.Function         ( ($), id )
@@ -31,7 +32,7 @@ import Data.List             ( all, filter, length, map
 import Data.Maybe            ( Maybe, fromJust )
 import Data.Tuple            ( fst )
 import Numeric               ( readHex )
-import Prelude               ( Num, error, fromInteger, seq )
+import Prelude               ( Num, error, seq )
 import System.IO             ( IO, FilePath )
 #if MIN_VERSION_base(4,2,0)
 import System.IO             ( IOMode(ReadMode)
@@ -39,6 +40,11 @@ import System.IO             ( IOMode(ReadMode)
                              )
 #else
 import System.IO             ( readFile )
+#endif
+
+#if __GLASGOW_HASKELL__ < 700
+import Control.Monad ( fail )
+import Prelude       ( fromInteger )
 #endif
 
 -- base-unicode-symbols
