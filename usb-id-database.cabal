@@ -5,7 +5,7 @@ build-type:    Simple
 stability:     provisional
 author:        Roel van Dijk <vandijk.roel@gmail.com>
 maintainer:    Roel van Dijk <vandijk.roel@gmail.com>
-copyright:     © 2009–2010 Roel van Dijk <vandijk.roel@gmail.com>
+copyright:     2009–2011 Roel van Dijk <vandijk.roel@gmail.com>
 license:       BSD3
 license-file:  LICENSE
 category:      System
@@ -24,8 +24,8 @@ flag example
   default:     False
 
 source-repository head
-  type:     darcs
-  location: http://code.haskell.org/~roelvandijk/code/usb-id-database
+  type:     git
+  location: git://github.com/roelvandijk/usb-id-database.git
 
 library
   build-depends: base                       >= 3.0.3.1 && < 4.4
