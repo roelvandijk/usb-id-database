@@ -8,11 +8,11 @@ module System.USB.IDDB.Misc
     ) where
 
 -- base
-import Data.Char     ( String )
 import Data.Either   ( Either, either )
 import Data.Function ( ($), const, flip )
 import Data.Maybe    ( Maybe(..) )
 import Data.Tuple    ( uncurry )
+import Prelude       ( String )
 
 -- parsimony
 import Parsimony        (Parser, manyTill)

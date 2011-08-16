@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP
            , NoImplicitPrelude
-           , UnicodeSyntax 
+           , UnicodeSyntax
   #-}
 
 {-| Functions to acquire a database from <http://linux-usb.org>. -}
@@ -23,16 +23,16 @@ module System.USB.IDDB.LinuxUsbIdRepo
 import Control.Arrow         ( second )
 import Control.Monad         ( (>>=), (>>), fmap, return )
 import Data.Bool             ( Bool, not )
-import Data.Char             ( String, isSpace )
+import Data.Char             ( isSpace )
 import Data.Function         ( ($), id )
 import Data.Int              ( Int )
 import Data.List             ( all, filter, length, map
-                             , isPrefixOf, lines, unlines 
+                             , isPrefixOf, lines, unlines
                              )
 import Data.Maybe            ( Maybe, fromJust )
 import Data.Tuple            ( fst )
 import Numeric               ( readHex )
-import Prelude               ( Num, error, seq )
+import Prelude               ( String, Num, error, seq )
 import System.IO             ( IO, FilePath )
 #if MIN_VERSION_base(4,2,0)
 import System.IO             ( IOMode(ReadMode)
@@ -195,7 +195,7 @@ dbParser = do (vendorNameId, vendorIdName, productDB) ← vendorSection
 -- error will be thrown.
 fromFile ∷ FilePath → IO (Maybe IDDB)
 #if MIN_VERSION_base(4,2,0)
-fromFile fp = withFile fp ReadMode 
+fromFile fp = withFile fp ReadMode
               $ \h → do hSetEncoding h latin1
                         contents ← hGetContents h
                         -- Bit ugly, but necessary to force the

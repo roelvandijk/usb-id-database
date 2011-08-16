@@ -35,11 +35,11 @@ module System.USB.IDDB.Base
 
 -- base
 import Control.Monad         ( (=<<), fmap )
-import Data.Char             ( String )
 import Data.Function         ( ($) )
 import Data.Int              ( Int )
 import Data.Maybe            ( Maybe )
 import Data.Tuple            ( fst, snd )
+import Prelude               ( String )
 
 -- base-unicode-symbols
 import Data.Function.Unicode ( (∘) )

@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP
            , NoImplicitPrelude
-           , UnicodeSyntax 
+           , UnicodeSyntax
   #-}
 
 {-| Functions to acquire a database from <http://www.usb.org>. -}
@@ -20,13 +20,13 @@ module System.USB.IDDB.UsbDotOrg
 -------------------------------------------------------------------------------
 
 -- base
-import Control.Monad         ( (>>=), fmap, return )
-import Data.Char             ( String )
-import Data.Function         ( ($) )
-import Data.Int              ( Int )
-import Data.Maybe            ( Maybe, fromJust )
-import System.IO             ( IO, FilePath, readFile )
-import Text.Read             ( read )
+import Control.Monad ( (>>=), fmap, return )
+import Data.Function ( ($) )
+import Data.Int      ( Int )
+import Data.Maybe    ( Maybe, fromJust )
+import Prelude       ( String )
+import System.IO     ( IO, FilePath, readFile )
+import Text.Read     ( read )
 
 #if __GLASGOW_HASKELL__ < 700
 import Control.Monad ( fail )
@@ -44,11 +44,11 @@ import qualified Data.IntMap.Unicode as IM ( (∅) )
 
 -- parsimony
 import Parsimony
-import Parsimony.Char        ( char, digit )
+import Parsimony.Char ( char, digit )
 
 -- usb-id-database
-import System.USB.IDDB.Base  ( IDDB(..), getDataFileName )
-import System.USB.IDDB.Misc  ( eitherMaybe, swap, restOfLine )
+import System.USB.IDDB.Base ( IDDB(..), getDataFileName )
+import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
 
 -------------------------------------------------------------------------------
