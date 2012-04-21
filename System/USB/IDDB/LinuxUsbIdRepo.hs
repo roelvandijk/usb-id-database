@@ -24,6 +24,7 @@ import Control.Arrow         ( second )
 import Control.Monad         ( (>>=), (>>), fmap, return )
 import Data.Bool             ( Bool, not )
 import Data.Char             ( isSpace )
+import Data.Eq               ( Eq )
 import Data.Function         ( ($), id )
 import Data.Int              ( Int )
 import Data.List             ( all, filter, length, map
@@ -120,7 +121,7 @@ dbParser = do (vendorNameId, vendorIdName, productDB) ← vendorSection
                           , dbLanguages    = l
                           }
     where
-      hexId ∷ Num n ⇒ Int → Parser String n
+      hexId ∷ (Eq n, Num n) ⇒ Int → Parser String n
       hexId d = do ds ← count d hexDigit
                    case readHex ds of
                      [(n, _)]  → return n

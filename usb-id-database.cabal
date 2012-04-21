@@ -28,12 +28,12 @@ source-repository head
   location: git://github.com/roelvandijk/usb-id-database.git
 
 library
-  build-depends: base                       >= 3.0.3.1 && < 4.5
+  build-depends: base                       >= 3.0.3.1 && < 4.6
                , base-unicode-symbols       >= 0.1.1   && < 0.3
                , bytestring                 == 0.9.*
                , containers                 <  0.5
                , containers-unicode-symbols <  0.4
-               , parsimony                  >= 1 && < 1.2
+               , parsimony                  >= 1 && < 1.4
   ghc-options: -Wall
   cpp-options: -DBUILD_WITH_CABAL
   exposed-modules: System.USB.IDDB
