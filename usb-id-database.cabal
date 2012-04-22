@@ -1,13 +1,15 @@
 name:          usb-id-database
-version:       0.4.0.6
+version:       0.4.0.7
 cabal-version: >=1.6
 build-type:    Simple
 stability:     provisional
 author:        Roel van Dijk <vandijk.roel@gmail.com>
 maintainer:    Roel van Dijk <vandijk.roel@gmail.com>
-copyright:     2009–2011 Roel van Dijk <vandijk.roel@gmail.com>
+copyright:     2009–2012 Roel van Dijk <vandijk.roel@gmail.com>
 license:       BSD3
 license-file:  LICENSE
+homepage:      https://github.com/roelvandijk/usb-id-database
+bug-reports:   https://github.com/roelvandijk/usb-id-database/issues
 category:      System
 synopsis:      A database of USB identifiers
 description:
