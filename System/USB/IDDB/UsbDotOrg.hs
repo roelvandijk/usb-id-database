@@ -1,7 +1,7 @@
-{-# LANGUAGE CPP
-           , NoImplicitPrelude
-           , UnicodeSyntax
-  #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE PackageImports    #-}
+{-# LANGUAGE UnicodeSyntax     #-}
 
 {-| Functions to acquire a database from <http://www.usb.org>. -}
 
@@ -19,36 +19,24 @@ module System.USB.IDDB.UsbDotOrg
 -- Imports
 -------------------------------------------------------------------------------
 
--- base
-import Control.Monad ( (>>=), fmap, return )
-import Data.Function ( ($) )
-import Data.Int      ( Int )
-import Data.Maybe    ( Maybe, fromJust )
-import Prelude       ( String )
-import System.IO     ( IO, FilePath, readFile )
-import Text.Read     ( read )
-
+import "base" Control.Monad ( (>>=), fmap, return )
+import "base" Data.Function ( ($) )
+import "base" Data.Int      ( Int )
+import "base" Data.Maybe    ( Maybe, fromJust )
+import "base" Prelude       ( String )
+import "base" System.IO     ( IO, FilePath, readFile )
+import "base" Text.Read     ( read )
 #if __GLASGOW_HASKELL__ < 700
-import Control.Monad ( fail )
+import "base" Control.Monad ( fail )
 #endif
-
--- base-unicode-symbols
-import Data.Function.Unicode ( (∘) )
-
--- containers
-import qualified Data.IntMap as IM ( fromList )
-import qualified Data.Map    as MP ( fromList )
-
--- containers-unicode-symbols
-import qualified Data.IntMap.Unicode as IM ( (∅) )
-
--- parsimony
-import Parsimony
-import Parsimony.Char ( char, digit )
-
--- usb-id-database
-import System.USB.IDDB.Base ( IDDB(..), getDataFileName )
-import System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
+import "base-unicode-symbols" Data.Function.Unicode ( (∘) )
+import qualified "containers" Data.IntMap as IM ( fromList )
+import qualified "containers" Data.Map    as MP ( fromList )
+import qualified "containers-unicode-symbols" Data.IntMap.Unicode as IM ( (∅) )
+import "parsimony" Parsimony
+import "parsimony" Parsimony.Char ( char, digit )
+import "this" System.USB.IDDB.Base ( IDDB(..), getDataFileName )
+import "this" System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
 
 -------------------------------------------------------------------------------

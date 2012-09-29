@@ -1,5 +1,6 @@
-{-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE PackageImports    #-}
+{-# LANGUAGE UnicodeSyntax     #-}
 
 module System.USB.IDDB.Misc
     ( eitherMaybe
@@ -7,16 +8,13 @@ module System.USB.IDDB.Misc
     , restOfLine
     ) where
 
--- base
-import Data.Either   ( Either, either )
-import Data.Function ( ($), const, flip )
-import Data.Maybe    ( Maybe(..) )
-import Data.Tuple    ( uncurry )
-import Prelude       ( String )
-
--- parsimony
-import Parsimony        (Parser, manyTill)
-import Parsimony.Char   (anyChar, newline)
+import "base" Data.Either   ( Either, either )
+import "base" Data.Function ( ($), const, flip )
+import "base" Data.Maybe    ( Maybe(..) )
+import "base" Data.Tuple    ( uncurry )
+import "base" Prelude       ( String )
+import "parsimony" Parsimony      (Parser, manyTill)
+import "parsimony" Parsimony.Char (anyChar, newline)
 
 
 eitherMaybe ∷ Either r α → Maybe α

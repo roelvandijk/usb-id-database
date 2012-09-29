@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE PackageImports    #-}
+{-# LANGUAGE UnicodeSyntax     #-}
 
 module System.USB.IDDB.Base
     ( IDDB(..)
@@ -33,30 +34,23 @@ module System.USB.IDDB.Base
     )
     where
 
--- base
-import Control.Monad         ( (=<<), fmap )
-import Data.Function         ( ($) )
-import Data.Int              ( Int )
-import Data.Maybe            ( Maybe )
-import Data.Tuple            ( fst, snd )
-import Prelude               ( String )
-
--- base-unicode-symbols
-import Data.Function.Unicode ( (∘) )
-
--- containers
-import qualified Data.IntMap as IM
-import qualified Data.Map    as MP
-
--- containers-unicode-symbols
-import qualified Data.IntMap.Unicode as IM ( (∅) )
-import qualified Data.Map.Unicode    as MP ( (∅) )
+import "base" Control.Monad ( (=<<), fmap )
+import "base" Data.Function ( ($) )
+import "base" Data.Int      ( Int )
+import "base" Data.Maybe    ( Maybe )
+import "base" Data.Tuple    ( fst, snd )
+import "base" Prelude       ( String )
+import "base-unicode-symbols" Data.Function.Unicode ( (∘) )
+import qualified "containers" Data.IntMap as IM
+import qualified "containers" Data.Map    as MP
+import qualified "containers-unicode-symbols" Data.IntMap.Unicode as IM ( (∅) )
+import qualified "containers-unicode-symbols" Data.Map.Unicode    as MP ( (∅) )
 
 #ifdef BUILD_WITH_CABAL
-import Paths_usb_id_database ( getDataFileName )
+import "this" Paths_usb_id_database ( getDataFileName )
 #else
-import Control.Monad ( return )
-import System.IO     ( IO, FilePath )
+import "base" Control.Monad ( return )
+import "base" System.IO     ( IO, FilePath )
 getDataFileName ∷ FilePath → IO FilePath
 getDataFileName = return
 #endif

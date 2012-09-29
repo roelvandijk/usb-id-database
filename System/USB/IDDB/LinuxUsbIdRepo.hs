@@ -1,7 +1,7 @@
-{-# LANGUAGE CPP
-           , NoImplicitPrelude
-           , UnicodeSyntax
-  #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE PackageImports    #-}
+{-# LANGUAGE UnicodeSyntax     #-}
 
 {-| Functions to acquire a database from <http://linux-usb.org>. -}
 
@@ -19,50 +19,41 @@ module System.USB.IDDB.LinuxUsbIdRepo
 -- Imports
 -------------------------------------------------------------------------------
 
--- base
-import Control.Arrow         ( second )
-import Control.Monad         ( (>>=), (>>), fmap, return )
-import Data.Bool             ( Bool, not )
-import Data.Char             ( isSpace )
-import Data.Eq               ( Eq )
-import Data.Function         ( ($), id )
-import Data.Int              ( Int )
-import Data.List             ( all, filter, length, map
-                             , isPrefixOf, lines, unlines
-                             )
-import Data.Maybe            ( Maybe, fromJust )
-import Data.Tuple            ( fst )
-import Numeric               ( readHex )
-import Prelude               ( String, Num, error, seq )
-import System.IO             ( IO, FilePath )
+import "base" Control.Arrow ( second )
+import "base" Control.Monad ( (>>=), (>>), fmap, return )
+import "base" Data.Bool     ( Bool, not )
+import "base" Data.Char     ( isSpace )
+import "base" Data.Eq       ( Eq )
+import "base" Data.Function ( ($), id )
+import "base" Data.Int      ( Int )
+import "base" Data.List     ( all, filter, length, map
+                            , isPrefixOf, lines, unlines
+                            )
+import "base" Data.Maybe    ( Maybe, fromJust )
+import "base" Data.Tuple    ( fst )
+import "base" Numeric       ( readHex )
+import "base" Prelude       ( String, Num, error, seq )
+import "base" System.IO     ( IO, FilePath )
 #if MIN_VERSION_base(4,2,0)
-import System.IO             ( IOMode(ReadMode)
-                             , withFile, hSetEncoding, latin1, hGetContents
-                             )
+import "base" System.IO     ( IOMode(ReadMode)
+                            , withFile, hSetEncoding, latin1, hGetContents
+                            )
 #else
-import System.IO             ( readFile )
+import "base" System.IO     ( readFile )
 #endif
 
 #if __GLASGOW_HASKELL__ < 700
-import Control.Monad ( fail )
-import Prelude       ( fromInteger )
+import "base" Control.Monad ( fail )
+import "base" Prelude       ( fromInteger )
 #endif
-
--- base-unicode-symbols
-import Data.Bool.Unicode     ( (∧) )
-import Data.Function.Unicode ( (∘) )
-
--- containers
-import qualified Data.IntMap as IM
-import qualified Data.Map    as MP
-
--- parsimony
-import Parsimony
-import Parsimony.Char        ( char, string, hexDigit, tab )
-
--- usb-id-database
-import System.USB.IDDB.Base
-import System.USB.IDDB.Misc  ( eitherMaybe, swap, restOfLine )
+import "base-unicode-symbols" Data.Bool.Unicode     ( (∧) )
+import "base-unicode-symbols" Data.Function.Unicode ( (∘) )
+import qualified "containers" Data.IntMap as IM
+import qualified "containers" Data.Map    as MP
+import "parsimony" Parsimony
+import "parsimony" Parsimony.Char ( char, string, hexDigit, tab )
+import "this" System.USB.IDDB.Base
+import "this" System.USB.IDDB.Misc ( eitherMaybe, swap, restOfLine )
 
 
 -------------------------------------------------------------------------------
